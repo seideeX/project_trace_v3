@@ -8,6 +8,7 @@ use App\Http\Controllers\ProcurementController;
 use App\Http\Controllers\ProcurementDocumentController;
 use App\Http\Controllers\ProcurementRouteController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\PurchaseRequestController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -57,6 +58,7 @@ Route::middleware(['auth', 'role:user|admin'])->group(function () {
     Route::get('/procurement/{procurement}/details',[ProcurementController::class, 'details'])->name('procurement.details');
 
     Route::resource('procurement', ProcurementController::class);
+    Route::resource('purchase-request', PurchaseRequestController::class);
     Route::resource('user', UserController::class);
     Route::resource('route', ProcurementRouteController::class);
     Route::resource('incoming', IncomingController::class);

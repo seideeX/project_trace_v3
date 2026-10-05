@@ -12,6 +12,7 @@ import {
     UserRoundCheckIcon,
     ArrowDownToLineIcon,
     ArrowUpFromLineIcon,
+    Form,
 } from "lucide-react";
 
 import {
@@ -46,6 +47,16 @@ export function AppSidebar({ ...props }) {
             href: route("dashboard"),
             icon: HomeIcon,
             active: true,
+        },
+        {
+            title: "Purchase Request Form",
+            href: route("purchase-request.create"),
+            icon: Form,
+        },
+        {
+            title: "My Purchase Requests",
+            href: route("purchase-request.index"),
+            icon: Form,
         },
         {
             title: "My Procurements",
