@@ -28,6 +28,7 @@ class PurchaseRequest extends Model
         'with_wafp',
         'included_in_app',
         'included_in_ppmp',
+        'amount',
 
         'requested_by',
         'requested_by_name',
@@ -74,5 +75,9 @@ class PurchaseRequest extends Model
     {
         return $this->hasOne(PurchaseRequestFeedback::class)
             ->latestOfMany();
+    }
+    public function requested_by()
+    {
+        return $this->belongsTo(User::class, 'requested_by');
     }
 }

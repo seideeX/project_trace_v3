@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StorePurchaseRequestRequest;
+use App\Http\Requests\UpdatePurchaseRequestRequest;
 use App\Models\PurchaseRequest;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -22,7 +23,28 @@ class PurchaseRequestController extends Controller
      */
     public function index()
     {
-        //
+        $purchaseRequests = PurchaseRequest::with([
+            'latestFeedback',
+            'requested_by:id,name',
+        ])
+            ->where('requested_by', auth()->id())
+            ->orderByDesc('pr_date')
+            ->orderByDesc('created_at')
+            ->select([
+                'id',
+                'pr_no',
+                'pr_date',
+                'purpose',
+                'status',
+                'amount',
+                'requested_by',
+            ])
+            ->get();
+
+        return Inertia::render('PR/Index', [
+            'purchaseRequests' => $purchaseRequests,
+            'queryParams' => request()->query(),
+        ]);
     }
 
     /**
@@ -44,10 +66,17 @@ class PurchaseRequestController extends Controller
 
         try {
             $purchaseRequest = DB::transaction(function () use ($data, $items) {
-                // Generate PR number inside the transaction
-                // so concurrent saves can't take the same number.
+
                 $data['pr_no'] = $this->generatePrNo($data['pr_date']);
                 $data['requested_by'] = auth()->id();
+
+                // Sum the total_cost of all items
+                $data['amount'] = round(
+                    collect($items)->sum(
+                        fn ($item) => (float) $item['total_cost']
+                    ),
+                    2
+                );
 
                 $purchaseRequest = PurchaseRequest::create($data);
 
@@ -58,12 +87,7 @@ class PurchaseRequestController extends Controller
                         'item_description'  => $item['item_description'],
                         'quantity'          => $item['quantity'],
                         'unit_cost'         => $item['unit_cost'],
-
-                        // Never trust the client total
-                        'total_cost'        => round(
-                            $item['quantity'] * $item['unit_cost'],
-                            2
-                        ),
+                        'total_cost'        => $item['total_cost'],
                     ])->all()
                 );
 
@@ -77,10 +101,12 @@ class PurchaseRequestController extends Controller
 
             return redirect()
                 ->route('purchase-request.index')
-                ->with('success', "Purchase Request {$purchaseRequest->pr_no} created successfully.");
+                ->with(
+                    'success',
+                    "Purchase Request {$purchaseRequest->pr_no} created successfully."
+                );
 
         } catch (\Throwable $e) {
-            // Log the actual error for debugging
             \Log::error('Failed to create Purchase Request', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
@@ -89,7 +115,10 @@ class PurchaseRequestController extends Controller
             return redirect()
                 ->back()
                 ->withInput()
-                ->with('error', 'Failed to create the Purchase Request. Please try again.');
+                ->with(
+                    'error',
+                    'Failed to create the Purchase Request. Please try again.'
+                );
         }
     }
 
@@ -98,7 +127,18 @@ class PurchaseRequestController extends Controller
      */
     public function show(PurchaseRequest $purchaseRequest)
     {
-        //
+        $purchaseRequest->load([
+            'requested_by:id,name',
+            'items',
+            'latestFeedback',
+            'feedbacks' => fn ($query) => $query
+                ->orderByDesc('created_at')
+                ->orderByDesc('id'),
+        ]);
+
+        return Inertia::render('PR/Show', [
+            'purchaseRequest' => $purchaseRequest,
+        ]);
     }
 
     /**
@@ -106,15 +146,54 @@ class PurchaseRequestController extends Controller
      */
     public function edit(PurchaseRequest $purchaseRequest)
     {
-        //
+        $purchaseRequest->load(['requested_by:id,name', 'items']);
+
+        return Inertia::render('PR/Edit', [
+            'purchaseRequest' => $purchaseRequest,
+        ]);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, PurchaseRequest $purchaseRequest)
+    public function update(UpdatePurchaseRequestRequest $request, PurchaseRequest $purchaseRequest)
     {
-        //
+        $data = $request->validated();
+        $items = $this->normalizeItems($data['items']);
+        unset($data['items']);
+
+        try {
+            DB::transaction(function () use ($purchaseRequest, $data, $items) {
+                // pr_no, requested_by and status are never changed from the form
+                $data['amount'] = round($items->sum('total_cost'), 2);
+
+                $purchaseRequest->update($data);
+
+                $this->syncItems($purchaseRequest, $items);
+            });
+
+            return redirect()
+                ->route('purchase-request.show', $purchaseRequest)
+                ->with(
+                    'success',
+                    "Purchase Request {$purchaseRequest->pr_no} updated successfully."
+                );
+
+        } catch (\Throwable $e) {
+            \Log::error('Failed to update Purchase Request', [
+                'purchase_request_id' => $purchaseRequest->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with(
+                    'error',
+                    'Failed to update the Purchase Request. Please try again.'
+                );
+        }
     }
 
     /**
@@ -123,6 +202,56 @@ class PurchaseRequestController extends Controller
     public function destroy(PurchaseRequest $purchaseRequest)
     {
         //
+    }
+
+    /**
+     * Recompute total_cost on the server so the client value is never trusted.
+     */
+    protected function normalizeItems(array $items)
+    {
+        return collect($items)->map(function ($item) {
+            $quantity = (float) $item['quantity'];
+            $unitCost = (float) $item['unit_cost'];
+
+            return [
+                'id'                => $item['id'] ?? null,
+                'stock_property_no' => $item['stock_property_no'] ?? null,
+                'unit'              => $item['unit'] ?? null,
+                'item_description'  => $item['item_description'],
+                'quantity'          => $quantity,
+                'unit_cost'         => $unitCost,
+                'total_cost'        => round($quantity * $unitCost, 2),
+            ];
+        });
+    }
+
+    /**
+     * Update rows that have an id, create rows without one,
+     * and delete rows that were not sent back.
+     */
+    protected function syncItems(PurchaseRequest $purchaseRequest, $items): void
+    {
+        $existingIds = $purchaseRequest->items()->pluck('id')->all();
+
+        // Only trust ids that belong to this purchase request
+        $keepIds = $items
+            ->pluck('id')
+            ->filter(fn ($id) => $id && in_array($id, $existingIds))
+            ->values()
+            ->all();
+
+        $purchaseRequest->items()->whereNotIn('id', $keepIds)->delete();
+
+        foreach ($items as $item) {
+            $id = $item['id'];
+            unset($item['id']);
+
+            if ($id && in_array($id, $existingIds)) {
+                $purchaseRequest->items()->whereKey($id)->update($item);
+            } else {
+                $purchaseRequest->items()->create($item);
+            }
+        }
     }
 
     /**

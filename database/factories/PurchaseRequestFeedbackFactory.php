@@ -2,13 +2,13 @@
 
 namespace Database\Factories;
 
-use App\Models\PurchaseRequestFeedbacks;
+use App\Models\PurchaseRequestFeedback;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends Factory<PurchaseRequestFeedbacks>
+ * @extends Factory<PurchaseRequestFeedback>
  */
-class PurchaseRequestFeedbacksFactory extends Factory
+class PurchaseRequestFeedbackFactory extends Factory
 {
     /**
      * Define the model's default state.

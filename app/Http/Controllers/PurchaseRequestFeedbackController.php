@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\PurchaseRequestFeedbacks;
+use App\Models\PurchaseRequestFeedback;
 use Illuminate\Http\Request;
 
 class PurchaseRequestFeedbacksController extends Controller
@@ -34,7 +34,7 @@ class PurchaseRequestFeedbacksController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(PurchaseRequestFeedbacks $purchaseRequestFeedbacks)
+    public function show(PurchaseRequestFeedback $purchaseRequestFeedbacks)
     {
         //
     }
@@ -42,7 +42,7 @@ class PurchaseRequestFeedbacksController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(PurchaseRequestFeedbacks $purchaseRequestFeedbacks)
+    public function edit(PurchaseRequestFeedback $purchaseRequestFeedbacks)
     {
         //
     }
@@ -50,7 +50,7 @@ class PurchaseRequestFeedbacksController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, PurchaseRequestFeedbacks $purchaseRequestFeedbacks)
+    public function update(Request $request, PurchaseRequestFeedback $purchaseRequestFeedbacks)
     {
         //
     }
@@ -58,7 +58,7 @@ class PurchaseRequestFeedbacksController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(PurchaseRequestFeedbacks $purchaseRequestFeedbacks)
+    public function destroy(PurchaseRequestFeedback $purchaseRequestFeedbacks)
     {
         //
     }

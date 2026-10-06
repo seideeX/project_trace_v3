@@ -24,6 +24,8 @@ return new class extends Migration
                     ->nullable();
                 $table->string('responsibility_center_code')
                     ->nullable();
+                $table->string('amount')
+                    ->nullable();
                 // Purpose / Program
                 $table->text('purpose')
                     ->nullable();

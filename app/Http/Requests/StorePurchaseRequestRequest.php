@@ -50,6 +50,7 @@ class StorePurchaseRequestRequest extends FormRequest
             'items.*.item_description'   => ['required', 'string'],
             'items.*.quantity'           => ['required', 'numeric', 'gt:0'],
             'items.*.unit_cost'          => ['required', 'numeric', 'min:0'],
+            'items.*.total_cost'         => ['required', 'numeric', 'min:0'],
         ];
     }
 
@@ -67,6 +68,7 @@ class StorePurchaseRequestRequest extends FormRequest
             'items.*.item_description' => 'item description',
             'items.*.quantity' => 'quantity',
             'items.*.unit_cost' => 'unit cost',
+            'items.*.total_cost' => 'total cost',
         ];
     }
 

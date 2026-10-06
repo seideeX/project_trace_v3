@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class PurchaseRequestFeedback extends Model
 {
     use HasFactory;
+    protected $table = 'purchase_request_feedbacks';
 
     protected $fillable = [
         'purchase_request_id',
