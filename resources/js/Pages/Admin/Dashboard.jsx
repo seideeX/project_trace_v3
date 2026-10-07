@@ -15,6 +15,7 @@ import {
     Plus,
     Route,
     TrendingUp,
+    Waypoints,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -207,8 +208,8 @@ export default function Dashboard({ departments = {}, dashboardData = {} }) {
                             onClick={() => setShowCreateModal(true)}
                             className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-500/25 transition-all duration-200 hover:bg-blue-700 hover:shadow-blue-500/35 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 active:scale-95"
                         >
-                            <Plus className="h-4 w-4 stroke-[2.5]" />
-                            Route Procurement
+                            <Waypoints className="h-4 w-4 stroke-[2.5]" />
+                            Route Purchase Request
                         </button>
                     </div>
 

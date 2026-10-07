@@ -204,9 +204,11 @@ export default function Dashboard({
                         | KPI Header
                         |--------------------------------------------------------------------------
                         */}
+
                         <ProcurementDashboardHeader
                             stats={stats}
-                            canCreate={auth.user?.role !== "user"}
+                            canCreate={["admin"].includes(auth.user?.role)}
+                            createLabel="Route PR"
                             onCreate={() => setShowCreateModal(true)}
                         />
 
