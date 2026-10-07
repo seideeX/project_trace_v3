@@ -85,7 +85,7 @@ export const PROCUREMENT_STAGES = [
         department: "BAC Secretariat",
         color: "from-blue-500 to-indigo-600",
 
-        docs: ["Purchase Request", "PPMP"],
+        docs: ["Purchase Request", "PPMP", "Market Scoping"],
 
         fields: [
             {
@@ -177,7 +177,6 @@ export const PROCUREMENT_STAGES = [
             },
         ],
     },
-
     {
         id: 3,
         value: "stage_3",
@@ -229,7 +228,6 @@ export const PROCUREMENT_STAGES = [
             },
         ],
     },
-
     {
         id: 4,
         value: "stage_4",
@@ -281,7 +279,6 @@ export const PROCUREMENT_STAGES = [
             },
         ],
     },
-
     {
         id: 5,
         value: "stage_5",
@@ -313,7 +310,6 @@ export const PROCUREMENT_STAGES = [
             },
         ],
     },
-
     {
         id: 6,
         value: "stage_6",
@@ -361,7 +357,6 @@ export const PROCUREMENT_STAGES = [
             },
         ],
     },
-
     {
         id: 7,
         value: "stage_7",
