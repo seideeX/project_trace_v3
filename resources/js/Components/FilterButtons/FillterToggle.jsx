@@ -4,7 +4,7 @@ import { router } from "@inertiajs/react";
 import { Button } from "@/components/ui/button";
 import SelectField from "@/components/SelectField";
 import useSearch from "@/hooks/useSearch";
-import { PROCUREMENT_STAGES } from "@/constants";
+import { PROCUREMENT_STAGES, PR_STATUSES } from "@/constants";
 import { useState } from "react";
 import { Input } from "../ui/input";
 
@@ -186,10 +186,7 @@ export default function FilterToggle({
                                     type="date"
                                     value={queryParams.date_from ?? ""}
                                     onChange={(e) =>
-                                        search(
-                                            "date_from",
-                                            e.target.value,
-                                        )
+                                        search("date_from", e.target.value)
                                     }
                                     className="rounded-xl border-slate-200 bg-white/70"
                                 />
@@ -204,10 +201,7 @@ export default function FilterToggle({
                                     type="date"
                                     value={queryParams.date_to ?? ""}
                                     onChange={(e) =>
-                                        search(
-                                            "date_to",
-                                            e.target.value,
-                                        )
+                                        search("date_to", e.target.value)
                                     }
                                     className="rounded-xl border-slate-200 bg-white/70"
                                 />
@@ -238,13 +232,35 @@ export default function FilterToggle({
                         </div>
                     )}
 
+                    {isVisible("pr_status") && (
+                        <div className="min-w-[180px] flex-1 sm:max-w-[220px]">
+                            <SelectField
+                                name="pr_status"
+                                label="Status"
+                                value={queryParams.pr_status ?? ""}
+                                onChange={handleChange("pr_status")}
+                                placeholder="All Statuses"
+                                options={[
+                                    { value: "", label: "All Statuses" },
+                                    ...PR_STATUSES,
+                                ]}
+                            />
+                        </div>
+                    )}
+
                     {(isVisible("status") || isVisible("stage")) && (
                         <div className="min-w-[240px] flex-[1.5] sm:max-w-[280px]">
                             <SelectField
                                 name={isVisible("stage") ? "stage" : "status"}
                                 label="Procurement Stage"
-                                value={isVisible("stage") ? queryParams.stage ?? "" : queryParams.status ?? ""}
-                                onChange={handleChange(isVisible("stage") ? "stage" : "status")}
+                                value={
+                                    isVisible("stage")
+                                        ? (queryParams.stage ?? "")
+                                        : (queryParams.status ?? "")
+                                }
+                                onChange={handleChange(
+                                    isVisible("stage") ? "stage" : "status",
+                                )}
                                 options={[
                                     {
                                         value: "",

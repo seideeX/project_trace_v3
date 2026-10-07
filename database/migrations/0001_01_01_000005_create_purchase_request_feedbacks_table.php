@@ -19,11 +19,21 @@ return new class extends Migration
                 ->cascadeOnDelete();
 
             $table->enum('action', [
+                'submitted',
+                'revision_requested',
+                'resubmitted',
+                'commented',
                 'approved',
                 'rejected',
-                'pending',
-            ]);
+            ])->default('commented');
+
             $table->text('feedback')->nullable();
+
+            $table->foreignId('created_by')
+                ->nullable()
+                ->constrained('users')
+                ->nullOnDelete();
+
             $table->timestamps();
         });
     }

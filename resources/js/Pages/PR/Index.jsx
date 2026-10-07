@@ -2,8 +2,18 @@ import BreadCrumbsHeader from "@/Components/BreadcrumbsHeader";
 import MainLayout from "@/Layouts/MainLayout";
 import DynamicTable from "../../Components/DynamicTable";
 import FilterToggle from "../../Components/FilterButtons/FillterToggle";
-import { Head, usePage } from "@inertiajs/react";
-import { Briefcase, FileText, MessageSquare, User } from "lucide-react";
+import { Head, router, usePage } from "@inertiajs/react";
+import {
+    Briefcase,
+    Eye,
+    FileText,
+    MessageSquare,
+    Pencil,
+    Printer,
+    Trash2,
+    User,
+} from "lucide-react";
+import ActionMenu from "@/Components/ActionMenu";
 
 const STATUS_STYLES = {
     draft: "bg-slate-100 text-slate-600",
@@ -34,7 +44,12 @@ const formatPeso = (value) =>
         maximumFractionDigits: 2,
     })}`;
 
-export default function Dashboard({ purchaseRequests, queryParams }) {
+export default function Dashboard({
+    purchaseRequests,
+    queryParams,
+    isAdmin,
+    departments,
+}) {
     const { flash } = usePage().props;
     queryParams = queryParams || {};
 
@@ -50,26 +65,51 @@ export default function Dashboard({ purchaseRequests, queryParams }) {
         ? purchaseRequests
         : (purchaseRequests?.data ?? []);
 
+    const handleView = (pr) => {
+        router.get(route("purchase-request.show", pr.id));
+    };
+    const handlePrint = (pr) => {
+        window.location.href = route("purchase-request.print", pr.id);
+    };
+
+    const handleEdit = (pr) => {
+        router.get(route("purchase-request.edit", pr.id));
+    };
+
+    const handleDelete = (pr) => {
+        if (
+            !confirm(
+                `Are you sure you want to delete Purchase Request ${pr.pr_no}?`,
+            )
+        ) {
+            return;
+        }
+
+        router.delete(route("purchase-request.destroy", pr.id), {
+            preserveScroll: true,
+        });
+    };
+
     const allColumns = [
         {
             key: "purchase_request",
             label: "PR Number & Purpose",
-            className: "w-[34%] min-w-[260px]",
+            className: "w-[28%] min-w-[260px]",
         },
         {
             key: "pr_date",
             label: "PR Date",
-            className: "w-[12%] min-w-[110px]",
+            className: "w-[11%] min-w-[110px]",
         },
         {
             key: "requested_by",
             label: "Requested By",
-            className: "w-[16%] min-w-[150px]",
+            className: "w-[15%] min-w-[150px]",
         },
         {
             key: "amount",
             label: "Amount",
-            className: "w-[12%] min-w-[130px] text-right",
+            className: "w-[11%] min-w-[130px] text-right",
             cellClassName: "text-right",
         },
         {
@@ -80,7 +120,13 @@ export default function Dashboard({ purchaseRequests, queryParams }) {
         {
             key: "latest_feedback",
             label: "Latest Feedback",
-            className: "w-[20%] min-w-[200px]",
+            className: "w-[18%] min-w-[200px]",
+        },
+        {
+            key: "actions",
+            label: "Actions",
+            className: "w-[12%] min-w-[150px] text-center",
+            cellClassName: "text-center",
         },
     ];
 
@@ -88,10 +134,12 @@ export default function Dashboard({ purchaseRequests, queryParams }) {
         purchase_request: (pr) => (
             <div className="flex items-start gap-2.5 min-w-0 w-full">
                 <FileText className="mt-0.5 h-4 w-4 shrink-0 text-blue-500" />
+
                 <div className="min-w-0 flex-1">
                     <div className="truncate text-xs font-bold text-slate-800">
                         {pr.pr_no}
                     </div>
+
                     <div
                         className="line-clamp-2 text-[11px] font-medium text-slate-500 mt-0.5"
                         title={pr.purpose}
@@ -111,6 +159,7 @@ export default function Dashboard({ purchaseRequests, queryParams }) {
         requested_by: (pr) => (
             <div className="flex items-center gap-2 min-w-0 w-full">
                 <User className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+
                 <span className="truncate text-xs font-medium text-slate-700">
                     {pr.requested_by?.name || "—"}
                 </span>
@@ -137,7 +186,10 @@ export default function Dashboard({ purchaseRequests, queryParams }) {
 
         latest_feedback: (pr) => {
             const fb = pr.latest_feedback;
-            if (!fb) return <span className="text-xs text-slate-400">—</span>;
+
+            if (!fb) {
+                return <span className="text-xs text-slate-400">—</span>;
+            }
 
             return (
                 <div className="flex flex-col min-w-0 w-full gap-1">
@@ -149,8 +201,10 @@ export default function Dashboard({ purchaseRequests, queryParams }) {
                     >
                         {fb.action}
                     </span>
+
                     <div className="flex items-start gap-1.5 text-[10px] text-slate-400">
                         <MessageSquare className="mt-0.5 h-3 w-3 shrink-0" />
+
                         <span className="line-clamp-2" title={fb.feedback}>
                             {fb.feedback}
                         </span>
@@ -158,6 +212,45 @@ export default function Dashboard({ purchaseRequests, queryParams }) {
                 </div>
             );
         },
+
+        actions: (pr) => (
+            <ActionMenu
+                actions={[
+                    {
+                        label: "View",
+                        icon: Eye,
+                        onClick: () => handleView(pr),
+                        className:
+                            "text-slate-500 hover:bg-slate-100 hover:text-slate-700",
+                    },
+                    {
+                        label: "Edit",
+                        icon: Pencil,
+                        onClick: () => handleEdit(pr),
+                        className:
+                            "text-blue-500 hover:bg-blue-50 hover:text-blue-600",
+                    },
+                    {
+                        label: "Delete",
+                        icon: Trash2,
+                        onClick: () => handleDelete(pr),
+                        className:
+                            "text-red-500 hover:bg-red-50 hover:text-red-600",
+                    },
+                    ...(pr.status === "approved"
+                        ? [
+                              {
+                                  label: "Print",
+                                  icon: Printer,
+                                  onClick: () => handlePrint(pr),
+                                  className:
+                                      "text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700",
+                              },
+                          ]
+                        : []),
+                ]}
+            />
+        ),
     };
 
     return (
@@ -188,8 +281,13 @@ export default function Dashboard({ purchaseRequests, queryParams }) {
 
                     <FilterToggle
                         queryParams={queryParams}
-                        visibleFilters={["status"]}
-                        clearRouteName="purchase-requests.index"
+                        visibleFilters={
+                            isAdmin
+                                ? ["pr_status", "date", "origin_department"]
+                                : ["pr_status", "date"]
+                        }
+                        departments={departments}
+                        clearRouteName="purchase-request.index"
                     />
 
                     <div className="overflow-hidden rounded-3xl border border-white/80 bg-white/70 shadow-[0_8px_30px_rgba(0,0,0,0.03)] backdrop-blur-xl">

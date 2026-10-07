@@ -13,6 +13,7 @@ import {
     ArrowDownToLineIcon,
     ArrowUpFromLineIcon,
     Form,
+    List,
 } from "lucide-react";
 
 import {
@@ -56,7 +57,7 @@ export function AppSidebar({ ...props }) {
         {
             title: "My Purchase Requests",
             href: route("purchase-request.index"),
-            icon: Form,
+            icon: List,
         },
         {
             title: "My Procurements",
@@ -102,6 +103,16 @@ export function AppSidebar({ ...props }) {
         },
         ...(!isAdminWithoutDepartment
             ? [
+                  {
+                      title: "Purchase Request Form",
+                      href: route("purchase-request.create"),
+                      icon: Form,
+                  },
+                  {
+                      title: "Purchase Requests",
+                      href: route("purchase-request.index"),
+                      icon: List,
+                  },
                   {
                       title: "Incoming PRs",
                       href: route("incoming.index"),

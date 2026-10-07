@@ -1,17 +1,19 @@
 import BreadCrumbsHeader from "@/Components/BreadcrumbsHeader";
 import MainLayout from "@/Layouts/MainLayout";
-import { Head, Link, usePage } from "@inertiajs/react";
+import Modal from "@/Components/Modal";
+import { Head, Link, router, usePage } from "@inertiajs/react";
 import {
     ArrowLeft,
     Check,
     FileText,
     Layers,
+    Loader2,
     MessageSquare,
     Package,
     Pencil,
     X,
 } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 const STATUS_STYLES = {
@@ -22,10 +24,15 @@ const STATUS_STYLES = {
 };
 
 const FEEDBACK_STYLES = {
-    pending: "bg-amber-50 text-amber-700",
+    submitted: "bg-blue-50 text-blue-700",
+    resubmitted: "bg-indigo-50 text-indigo-700",
+    commented: "bg-slate-100 text-slate-600",
+    revision_requested: "bg-amber-50 text-amber-700",
     approved: "bg-emerald-50 text-emerald-700",
-    returned: "bg-red-50 text-red-700",
+    rejected: "bg-red-50 text-red-700",
 };
+
+const humanize = (value) => (value ?? "").replaceAll("_", " ");
 
 const formatCurrency = (value) =>
     new Intl.NumberFormat("en-PH", {
@@ -61,8 +68,13 @@ const itemTotal = (item) =>
         ? Number(item.total_cost)
         : (Number(item.quantity) || 0) * (Number(item.unit_cost) || 0);
 
-export default function Show({ purchaseRequest }) {
+export default function Show({ purchaseRequest, isAdmin = false }) {
     const { flash } = usePage().props;
+
+    const [comment, setComment] = useState("");
+    const [submittingAction, setSubmittingAction] = useState(null);
+    const [confirmOpen, setConfirmOpen] = useState(false);
+    const [pendingAction, setPendingAction] = useState("approved");
 
     const breadcrumbs = [
         {
@@ -94,8 +106,51 @@ export default function Show({ purchaseRequest }) {
           ? [purchaseRequest.latest_feedback]
           : [];
 
-    // Only drafts are editable. Adjust to match your backend policy.
-    const canEdit = purchaseRequest.status === "draft";
+    // Editable until a final decision is made. Adjust to match your policy.
+    const canEdit = ["draft", "submitted"].includes(purchaseRequest.status);
+
+    // Approve / reject are hidden once a final decision has been made
+    const isFinal = ["approved", "rejected"].includes(purchaseRequest.status);
+
+    // Step 1: validate the comment, then open the confirmation modal
+    const requestReview = (action) => {
+        if (!comment.trim()) {
+            toast.error("Please write a comment first.", {
+                description:
+                    "A comment is required before you can approve or reject.",
+            });
+            return;
+        }
+
+        setPendingAction(action);
+        setConfirmOpen(true);
+    };
+
+    // Step 2: the admin confirmed in the modal, send it
+    const confirmReview = () => {
+        router.post(
+            route("purchase-request.feedback", purchaseRequest.id),
+            { action: pendingAction, feedback: comment.trim() },
+            {
+                preserveScroll: true,
+                onStart: () => setSubmittingAction(pendingAction),
+                onSuccess: () => setComment(""),
+                onError: (errors) => {
+                    toast.error("Unable to submit", {
+                        description:
+                            Object.values(errors)[0] ??
+                            "Please check your input and try again.",
+                    });
+                },
+                onFinish: () => {
+                    setSubmittingAction(null);
+                    setConfirmOpen(false);
+                },
+            },
+        );
+    };
+
+    const isApproving = pendingAction === "approved";
 
     return (
         <MainLayout>
@@ -351,7 +406,11 @@ export default function Show({ purchaseRequest }) {
                     <DetailCard
                         icon={MessageSquare}
                         title="Feedback"
-                        description="Review comments from Procurement."
+                        description={
+                            isAdmin
+                                ? "Leave a comment, then approve or reject this request."
+                                : "Review comments from Procurement."
+                        }
                     >
                         {feedbacks.length === 0 ? (
                             <p className="rounded-2xl border border-dashed border-slate-200 px-4 py-8 text-center text-sm font-medium text-slate-400">
@@ -374,22 +433,181 @@ export default function Show({ purchaseRequest }) {
                                                     "bg-slate-100 text-slate-600"
                                                 }`}
                                             >
-                                                {fb.action}
+                                                {humanize(fb.action)}
                                             </span>
                                             <span className="text-[11px] font-medium text-slate-400">
+                                                {fb.created_by?.name &&
+                                                    `${fb.created_by.name} · `}
                                                 {formatDateTime(fb.created_at)}
                                             </span>
                                         </div>
-                                        <p className="text-sm text-slate-700">
-                                            {fb.feedback}
-                                        </p>
+                                        {fb.feedback && (
+                                            <p className="whitespace-pre-line text-sm text-slate-700">
+                                                {fb.feedback}
+                                            </p>
+                                        )}
                                     </li>
                                 ))}
                             </ul>
                         )}
+
+                        {isAdmin &&
+                            (isFinal ? (
+                                <div className="mt-6 border-t border-slate-100 pt-6">
+                                    <span
+                                        className={`inline-flex items-center rounded-md px-2.5 py-1 text-xs font-semibold capitalize ${
+                                            STATUS_STYLES[
+                                                purchaseRequest.status
+                                            ]
+                                        }`}
+                                    >
+                                        Already {purchaseRequest.status}
+                                    </span>
+                                </div>
+                            ) : (
+                                <div className="mt-6 space-y-3 border-t border-slate-100 pt-6">
+                                    <label
+                                        htmlFor="review-comment"
+                                        className="block text-sm font-medium text-slate-700"
+                                    >
+                                        Comment{" "}
+                                        <span className="text-red-500">*</span>
+                                    </label>
+                                    <textarea
+                                        id="review-comment"
+                                        rows={3}
+                                        value={comment}
+                                        onChange={(e) =>
+                                            setComment(e.target.value)
+                                        }
+                                        disabled={submittingAction !== null}
+                                        placeholder="Write your comment. Required to approve or reject."
+                                        className="block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:opacity-60"
+                                    />
+
+                                    <div className="flex flex-wrap items-center justify-end gap-3">
+                                        <button
+                                            type="button"
+                                            onClick={() =>
+                                                requestReview("rejected")
+                                            }
+                                            disabled={
+                                                submittingAction !== null ||
+                                                !comment.trim()
+                                            }
+                                            className="inline-flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-semibold text-red-700 transition hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-500/30 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
+                                        >
+                                            {submittingAction === "rejected" ? (
+                                                <Loader2 className="h-4 w-4 animate-spin" />
+                                            ) : (
+                                                <X className="h-4 w-4" />
+                                            )}
+                                            Reject
+                                        </button>
+
+                                        <button
+                                            type="button"
+                                            onClick={() =>
+                                                requestReview("approved")
+                                            }
+                                            disabled={
+                                                submittingAction !== null ||
+                                                !comment.trim()
+                                            }
+                                            className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/25 transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
+                                        >
+                                            {submittingAction === "approved" ? (
+                                                <Loader2 className="h-4 w-4 animate-spin" />
+                                            ) : (
+                                                <Check className="h-4 w-4" />
+                                            )}
+                                            Approve
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
                     </DetailCard>
                 </div>
             </div>
+
+            {/* APPROVE / REJECT CONFIRMATION */}
+            <Modal
+                show={confirmOpen}
+                maxWidth="md"
+                closeable={submittingAction === null}
+                onClose={() => setConfirmOpen(false)}
+            >
+                <div className="p-6">
+                    <div className="flex items-start gap-4">
+                        <div
+                            className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full ${
+                                isApproving
+                                    ? "bg-emerald-50 text-emerald-600"
+                                    : "bg-red-50 text-red-600"
+                            }`}
+                        >
+                            {isApproving ? (
+                                <Check className="h-5 w-5" />
+                            ) : (
+                                <X className="h-5 w-5" />
+                            )}
+                        </div>
+
+                        <div className="min-w-0 flex-1">
+                            <h3 className="text-base font-bold text-slate-900">
+                                {isApproving ? "Approve" : "Reject"} purchase
+                                request?
+                            </h3>
+                            <p className="mt-1 text-sm text-slate-500">
+                                {isApproving
+                                    ? "This marks the request as approved."
+                                    : "This marks the request as rejected."}{" "}
+                                <span className="font-semibold text-slate-700">
+                                    {purchaseRequest.pr_no}
+                                </span>{" "}
+                                will be updated and your comment will be added
+                                to its feedback.
+                            </p>
+
+                            <div className="mt-4 rounded-xl border border-slate-200/80 bg-slate-50/60 p-3">
+                                <p className="mb-1 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                                    Your comment
+                                </p>
+                                <p className="max-h-32 overflow-y-auto whitespace-pre-line break-words text-sm text-slate-700">
+                                    {comment.trim()}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="mt-6 flex items-center justify-end gap-3">
+                        <button
+                            type="button"
+                            onClick={() => setConfirmOpen(false)}
+                            disabled={submittingAction !== null}
+                            className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                            Cancel
+                        </button>
+
+                        <button
+                            type="button"
+                            onClick={confirmReview}
+                            disabled={submittingAction !== null}
+                            className={`inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold text-white shadow-lg transition focus:outline-none focus:ring-2 focus:ring-offset-2 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60 ${
+                                isApproving
+                                    ? "bg-emerald-600 shadow-emerald-500/25 hover:bg-emerald-700 focus:ring-emerald-500"
+                                    : "bg-red-600 shadow-red-500/25 hover:bg-red-700 focus:ring-red-500"
+                            }`}
+                        >
+                            {submittingAction !== null && (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                            )}
+                            {isApproving ? "Yes, approve" : "Yes, reject"}
+                        </button>
+                    </div>
+                </div>
+            </Modal>
         </MainLayout>
     );
 }

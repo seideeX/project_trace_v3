@@ -22,8 +22,8 @@ class DatabaseSeeder extends Seeder
         $this->call([
             DepartmentSeeder::class,
             UserSeeder::class,
-            ProcurementSeeder::class,
-            ProcurementRouteSeeder::class,
+            // ProcurementSeeder::class,
+            // ProcurementRouteSeeder::class,
         ]);
 
         $user = User::factory()->create([
@@ -47,10 +47,12 @@ class DatabaseSeeder extends Seeder
             [
                 'name' => 'Keith Mae De Leon',
                 'email' => 'keith.mae.de.leon@sdo.local',
+                'role' => 'admin',
             ],
             [
                 'name' => 'Cheryl Ramiro',
                 'email' => 'cheryl.ramiro@sdo.local',
+                'role' => 'admin',
             ],
         ];
 

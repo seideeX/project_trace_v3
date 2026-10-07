@@ -413,3 +413,9 @@ export const DEPARTMENTS = [
     "Planning and Research Unit",
     "Legal Unit",
 ];
+export const PR_STATUSES = [
+    { value: "draft", label: "Draft" },
+    { value: "submitted", label: "Submitted" },
+    { value: "approved", label: "Approved" },
+    { value: "rejected", label: "Rejected" },
+];

@@ -86,8 +86,15 @@ return new class extends Migration
                 $table->string('certified_by_designation')
                     ->nullable();
                 // Workflow
-                $table->string('status')
-                    ->default('draft');
+                $table->enum('status', [
+                    'draft',
+                    'submitted',
+                    'under_review',
+                    'revision_requested',
+                    'approved',
+                    'rejected',
+                    'cancelled',
+                ])->default('draft');
                 $table->timestamps();
                 $table->softDeletes();
             });

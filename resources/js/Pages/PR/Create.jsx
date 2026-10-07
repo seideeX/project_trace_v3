@@ -49,8 +49,7 @@ export default function Create() {
     const { data, setData, post, processing, errors } = useForm({
         // Basic PR information
         pr_date: "",
-        entity_name:
-            "Department of Education - Schools Division Office of the City of Ilagan",
+        entity_name: "Schools Division Office of the City of Ilagan",
         fund_cluster: "",
         office_section: "",
         responsibility_center_code: "",

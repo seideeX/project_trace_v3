@@ -57,6 +57,11 @@ Route::middleware(['auth', 'role:user|admin'])->group(function () {
     Route::put('/users/{user}/reset-password',[UserController::class, 'resetPassword'])->name('admin.users.reset-password');
     Route::get('/procurement/{procurement}/details',[ProcurementController::class, 'details'])->name('procurement.details');
 
+    Route::post('purchase-request/{purchaseRequest}/feedback', [PurchaseRequestController::class, 'storeFeedback'])
+    ->name('purchase-request.feedback');
+    Route::get('purchase-request/{purchaseRequest}/print', [PurchaseRequestController::class, 'print'])
+    ->name('purchase-request.print');
+
     Route::resource('procurement', ProcurementController::class);
     Route::resource('purchase-request', PurchaseRequestController::class);
     Route::resource('user', UserController::class);

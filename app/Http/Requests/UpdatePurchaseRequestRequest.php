@@ -55,6 +55,9 @@ class UpdatePurchaseRequestRequest extends FormRequest
             'certified_by_name' => ['nullable', 'string', 'max:255'],
             'certified_by_designation' => ['nullable', 'string', 'max:255'],
 
+            // Note sent to the reviewer when resubmitting
+            'comment' => ['nullable', 'string', 'max:2000'],
+
             // Items
             'items' => ['required', 'array', 'min:1'],
             'items.*.id' => ['nullable', 'integer'],
