@@ -24,6 +24,7 @@ class UserSeeder extends Seeder
                 'middle_name' => 'CONSTANTINO',
                 'department' => 'Office of the Schools Division Superintendent',
                 'position' => 'Schools Division Superintendent',
+                'is_head' => true,
             ],
             [
                 'last_name' => 'RAMIRO',
@@ -31,6 +32,7 @@ class UserSeeder extends Seeder
                 'middle_name' => 'RAYMUNDO',
                 'department' => 'Office of the Assistant Schools Division Superintendent',
                 'position' => 'Assistant Schools Division Superintendent',
+                'is_head' => true,
             ],
             [
                 'last_name' => 'GARCIA',
@@ -38,6 +40,7 @@ class UserSeeder extends Seeder
                 'middle_name' => 'MADDUMA',
                 'department' => 'Legal Unit',
                 'position' => 'Attorney III',
+                'is_head' => true,
             ],
             [
                 'last_name' => 'ANDAYA',
@@ -45,6 +48,7 @@ class UserSeeder extends Seeder
                 'middle_name' => 'FELIX',
                 'department' => 'Accounting Unit',
                 'position' => 'Accountant III',
+                'is_head' => true,
             ],
             [
                 'last_name' => 'SACCUAN',
@@ -52,6 +56,7 @@ class UserSeeder extends Seeder
                 'middle_name' => 'EUGENIO',
                 'department' => 'ICT Unit',
                 'position' => 'Information Technology Officer I',
+                'is_head' => true,
             ],
             [
                 'last_name' => 'BELTRAN',
@@ -59,6 +64,7 @@ class UserSeeder extends Seeder
                 'middle_name' => 'MARAMAG',
                 'department' => 'Administrative Unit',
                 'position' => 'Administrative Officer V',
+                'is_head' => true,
             ],
             [
                 'last_name' => 'BICLAR',
@@ -66,6 +72,7 @@ class UserSeeder extends Seeder
                 'middle_name' => 'BAYSA',
                 'department' => 'Budget Unit',
                 'position' => 'Administrative Officer V',
+                'is_head' => true,
             ],
             [
                 'last_name' => 'JIMENEZ',
@@ -73,6 +80,7 @@ class UserSeeder extends Seeder
                 'middle_name' => 'LALISAN',
                 'department' => 'Records Unit',
                 'position' => 'Administrative Officer IV',
+                'is_head' => true,
             ],
             [
                 'last_name' => 'CRISOSTOMO',
@@ -80,6 +88,7 @@ class UserSeeder extends Seeder
                 'middle_name' => 'SAN PEDRO',
                 'department' => 'Human Resource Management Unit',
                 'position' => 'Administrative Officer IV',
+                'is_head' => true,
             ],
             [
                 'last_name' => 'SORIANO',
@@ -87,6 +96,7 @@ class UserSeeder extends Seeder
                 'middle_name' => 'CURAMPEZ',
                 'department' => 'Supply Unit',
                 'position' => 'Administrative Officer IV',
+                'is_head' => true,
             ],
             [
                 'last_name' => 'DE LEON',
@@ -94,6 +104,7 @@ class UserSeeder extends Seeder
                 'middle_name' => 'CORTEZ',
                 'department' => 'Procurement Unit',
                 'position' => 'Administrative Officer IV',
+                'is_head' => true,
             ],
             [
                 'last_name' => 'YASTO',

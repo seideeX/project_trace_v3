@@ -435,6 +435,7 @@ class ProcurementController extends Controller
 
             'queryParams' =>
                 $queryParams,
+
         ]);
     }
     /**

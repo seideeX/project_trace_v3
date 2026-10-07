@@ -81,6 +81,7 @@ export default function Dashboard({
                     {/* <pre>{JSON.stringify(procurements, undefined, 2)}</pre> */}
                     <ProcurementDashboardHeader
                         stats={stats}
+                        canCreate={user?.role !== "user"}
                         onCreate={() => setShowCreateModal(true)}
                     />
 

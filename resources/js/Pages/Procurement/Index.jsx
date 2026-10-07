@@ -23,7 +23,7 @@ export default function Dashboard({
     user,
     departments,
 }) {
-    const { flash } = usePage().props;
+    const { auth, flash } = usePage().props;
 
     const breadcrumbs = [
         {
@@ -206,6 +206,7 @@ export default function Dashboard({
                         */}
                         <ProcurementDashboardHeader
                             stats={stats}
+                            canCreate={auth.user?.role !== "user"}
                             onCreate={() => setShowCreateModal(true)}
                         />
 

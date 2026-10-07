@@ -77,6 +77,7 @@ export default function Index({ departments, procurements, queryParams }) {
                     {/* Procurement Header */}
                     <ProcurementDashboardHeader
                         onCreate={() => setShowCreateModal(true)}
+                        canCreate={user?.role !== "user"}
                     />
 
                     {/* Procurement Registry */}

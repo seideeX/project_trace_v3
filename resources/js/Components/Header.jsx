@@ -13,6 +13,7 @@ export default function ProcurementDashboardHeader({
     stats = null,
     onCreate = null,
     createLabel = "Create New PR",
+    canCreate,
 }) {
     return (
         <div className="space-y-4">
@@ -35,7 +36,7 @@ export default function ProcurementDashboardHeader({
                     <p className="mt-1 text-xs text-slate-500">{description}</p>
                 </div>
 
-                {onCreate && (
+                {canCreate && onCreate && (
                     <button
                         type="button"
                         onClick={onCreate}
