@@ -246,40 +246,53 @@ class PurchaseRequestController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdatePurchaseRequestRequest $request, PurchaseRequest $purchaseRequest)
+   public function update(UpdatePurchaseRequestRequest $request, PurchaseRequest $purchaseRequest)
     {
         $data = $request->validated();
         $items = $this->normalizeItems($data['items']);
         $comment = trim((string) ($data['comment'] ?? ''));
         unset($data['items'], $data['comment']);
 
+        // If the latest feedback is an approval, only the details are updated:
+        // no resubmission, no new feedback, and the status stays as it is.
+        $isApproved = $purchaseRequest->feedbacks()
+            ->orderByDesc('created_at')
+            ->orderByDesc('id')
+            ->value('action') === 'approved';
+
         try {
-            DB::transaction(function () use ($purchaseRequest, $data, $items, $comment) {
+            DB::transaction(function () use ($purchaseRequest, $data, $items, $comment, $isApproved) {
                 // pr_no and requested_by are never changed from the form
                 $data['amount'] = round($items->sum('total_cost'), 2);
 
-                // Editing resubmits the PR for review
-                $data['status'] = 'submitted';
+                if (! $isApproved) {
+                    // Editing resubmits the PR for review
+                    $data['status'] = 'submitted';
+                }
 
                 $purchaseRequest->update($data);
 
                 $this->syncItems($purchaseRequest, $items);
 
-                // Record the resubmission so the reviewer sees the note
-                $purchaseRequest->feedbacks()->create([
-                    'action'     => 'resubmitted',
-                    'feedback'   => $comment !== ''
-                        ? $comment
-                        : 'Purchase Request updated and resubmitted.',
-                    'created_by' => auth()->id(),
-                ]);
+                if (! $isApproved) {
+                    // Record the resubmission so the reviewer sees the note
+                    $purchaseRequest->feedbacks()->create([
+                        'action'     => 'resubmitted',
+                        'feedback'   => $comment !== ''
+                            ? $comment
+                            : 'Purchase Request updated and resubmitted.',
+                        'created_by' => auth()->id(),
+                    ]);
+                }
             });
 
             return redirect()
                 ->route('purchase-request.show', $purchaseRequest)
                 ->with(
                     'success',
-                    "Purchase Request {$purchaseRequest->pr_no} updated and resubmitted."
+                    $isApproved
+                        ? "Purchase Request {$purchaseRequest->pr_no} updated."
+                        : "Purchase Request {$purchaseRequest->pr_no} updated and resubmitted."
                 );
 
         } catch (\Throwable $e) {
